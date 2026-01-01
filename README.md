@@ -78,6 +78,20 @@ So before accepting a token, the wrapper checks:
 
 ---
 
+## Block diagram (high-level)
+
+This is the top-level dataflow of `lz77_decomp_stream` (wrapper).  
+Data moves left → right. `READY/tready` flows backward (backpressure).
+
+![Block diagram: wrapper + core + FIFO](docs/images/00_block_diagram.png)
+
+**Blocks**
+- **Unpack + Input Gating**: unpacks input `TDATA` into `{distance, length, literal}` and only accepts a token when it is safe (enough FIFO space for that token’s worst-case output).
+- **LZ77 Core**: expands each token into output bytes (copy `length` bytes from history, then output the final `literal`).
+- **Output FIFO**: buffers output bytes so the stream can handle downstream stalls (`m_axis_tready` low) without losing data.
+
+---
+
 ## Token format
 The AXI input token is packed into `TDATA` as:
 
